@@ -1,0 +1,9 @@
+{
+  "name": "college-av",
+  "private": true,
+  "description": "Monorepo root for Vercel (client build + serverless API)",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "serverless-http": "^3.2.0"
+  }
+}

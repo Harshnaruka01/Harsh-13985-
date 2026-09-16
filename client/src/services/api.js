@@ -15,7 +15,11 @@ const getHeaders = () => {
 const handleResponse = async (response) => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const errorMsg = data.message || `HTTP error! status: ${response.status}`;
+    let errorMsg = data.message || `HTTP error! status: ${response.status}`;
+    if (response.status === 405 && !data.message) {
+      errorMsg =
+        'API route not reachable (405). On Vercel, redeploy with the latest vercel.json and set MONGODB_URI.';
+    }
     throw new Error(errorMsg);
   }
   return data;

@@ -96,17 +96,17 @@ This repo is a **React frontend** (`client/`) and a **Node/Express API** (`serve
 
 A starter `render.yaml` is included at the repo root for Blueprint deploys.
 
-### 2. Deploy the frontend (Vercel)
+### 2. Deploy on Vercel (frontend + API on one URL)
 
-1. Import the GitHub repo in [Vercel](https://vercel.com).
-2. Leave **Root Directory** as the repository root (default). The root `vercel.json` builds `client/` and enables React Router SPA routing.
-3. **Environment variables** (Project → Settings → Environment Variables):
-   - `VITE_API_URL` = `https://YOUR-API-HOST/api` (no trailing slash), e.g. `https://harsh-13985-api.onrender.com/api`
-4. Redeploy. Open your Vercel URL (e.g. `https://harsh-13985.vercel.app`).
+1. Import the GitHub repo in [Vercel](https://vercel.com) with **Root Directory** = repo root (default).
+2. **Environment variables** (required for login on production):
+   - `MONGODB_URI` — MongoDB Atlas connection string (in-memory MongoDB does not work reliably on Vercel serverless)
+   - `JWT_SECRET` — long random string
+3. Redeploy. The app calls `/api/...` on the same domain; `vercel.json` routes those requests to the Express API in `api/index.js` (do **not** leave only the SPA rewrite, or login returns **405**).
 
-If the site shows **404**, the last deploy likely failed or used the wrong folder—confirm the build log and that `vercel.json` is on `main`.
+Optional: host the API on Render instead and set `VITE_API_URL` to `https://YOUR-API-HOST/api` so the browser talks to that host directly.
 
-Login and data only work after **both** the API is live and `VITE_API_URL` points to it. Local dev still uses the Vite proxy to `localhost:5000` when `VITE_API_URL` is unset.
+Local dev still uses the Vite proxy to `localhost:5000` when `VITE_API_URL` is unset.
 
 ---
 
