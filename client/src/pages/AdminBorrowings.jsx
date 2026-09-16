@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import ReturnModal from '../components/ReturnModal';
+import TransferModal from '../components/TransferModal';
 import { Shield, RefreshCw, AlertTriangle, Package, Search, Loader2 } from 'lucide-react';
 
 const AdminBorrowings = () => {
@@ -13,6 +14,9 @@ const AdminBorrowings = () => {
   // Return modal state
   const [selectedBorrowing, setSelectedBorrowing] = useState(null);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  // Transfer modal state
+  const [selectedTransferBorrowing, setSelectedTransferBorrowing] = useState(null);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   const fetchBorrowings = async () => {
     try {
@@ -33,6 +37,11 @@ const AdminBorrowings = () => {
   const handleReturnClick = (borrowing) => {
     setSelectedBorrowing(borrowing);
     setIsReturnModalOpen(true);
+  };
+
+  const handleTransferClick = (borrowing) => {
+    setSelectedTransferBorrowing(borrowing);
+    setIsTransferModalOpen(true);
   };
 
   const filteredBorrowings = borrowings.filter((b) => {
@@ -165,6 +174,15 @@ const AdminBorrowings = () => {
                           Process Return
                         </button>
                       )}
+                      {(item.status === 'BORROWED' || item.status === 'OVERDUE') && (
+                        <button
+                          onClick={() => handleTransferClick(item)}
+                          className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ml-2"
+                        >
+                          <Shield className="w-3.5 h-3.5" />
+                          Transfer
+                        </button>
+                      )}
                     </td>
 
                   </tr>
@@ -182,6 +200,17 @@ const AdminBorrowings = () => {
         onClose={() => {
           setIsReturnModalOpen(false);
           setSelectedBorrowing(null);
+        }}
+        onSuccess={fetchBorrowings}
+      />
+
+      {/* Transfer Modal */}
+      <TransferModal
+        borrowing={selectedTransferBorrowing}
+        isOpen={isTransferModalOpen}
+        onClose={() => {
+          setIsTransferModalOpen(false);
+          setSelectedTransferBorrowing(null);
         }}
         onSuccess={fetchBorrowings}
       />

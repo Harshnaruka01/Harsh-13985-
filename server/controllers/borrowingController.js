@@ -177,6 +177,60 @@ const getBorrowingById = async (req, res) => {
   }
 };
 
+// @desc    Transfer an active borrowing to another user (admin only)
+// @route   POST /api/borrowings/:id/transfer
+// @access  Admin
+const transferBorrowing = async (req, res) => {
+  try {
+    const { newUserEmail, newUserId } = req.body || {};
+
+    console.log('[transferBorrowing] invoked by user:', req.user ? req.user.email : 'unknown');
+    console.log('[transferBorrowing] body:', req.body);
+
+    const borrowing = await Borrowing.findById(req.params.id);
+    if (!borrowing) {
+      return res.status(404).json({ message: 'Borrowing record not found' });
+    }
+
+    // Only active loans may be transferred
+    if (!['BORROWED', 'OVERDUE'].includes(borrowing.status)) {
+      return res.status(400).json({ message: 'Only active borrowings can be transferred' });
+    }
+
+    // Resolve new user either by id or email
+    let user = null;
+    if (newUserId) {
+      if (!newUserId.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({ message: 'Invalid newUserId format' });
+      }
+      user = await User.findById(newUserId);
+    } else if (newUserEmail) {
+      try {
+        user = await User.findOne({ email: newUserEmail.toLowerCase() });
+      } catch (e) {
+        console.warn('[transferBorrowing] user lookup failed for email:', newUserEmail, e.message);
+      }
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'Target user not found' });
+    }
+
+    // Perform transfer: change borrower while keeping borrow/due dates, quantity, deposit, and status unchanged
+    borrowing.userId = user._id;
+    await borrowing.save();
+
+    const updated = await Borrowing.findById(borrowing._id)
+      .populate('userId', 'name email role')
+      .populate('equipmentId', 'name category lateFeePerDay depositAmount condition imageUrl');
+
+    res.json({ message: 'Borrowing transferred successfully', borrowing: updated });
+  } catch (error) {
+    console.error('transferBorrowing error:', error);
+    res.status(500).json({ message: 'Error transferring borrowing', error: error.message });
+  }
+};
+
 // @desc    Process equipment return (calculate late days, fee & refund)
 // @route   POST /api/borrowings/:id/return
 // @access  Private
@@ -263,5 +317,6 @@ module.exports = {
   createBorrowing,
   getBorrowings,
   getBorrowingById,
-  returnBorrowing
+  returnBorrowing,
+  transferBorrowing
 };

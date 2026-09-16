@@ -40,6 +40,15 @@ export const api = {
     return handleResponse(res);
   },
 
+    transferBorrowing: async (id, data = {}) => {
+      const res = await fetch(`${API_BASE_URL}/borrowings/${id}/transfer`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data)
+      });
+      return handleResponse(res);
+    },
+
   demoLogin: async (role) => {
     const res = await fetch(`${API_BASE_URL}/auth/demo-login`, {
       method: 'POST',
