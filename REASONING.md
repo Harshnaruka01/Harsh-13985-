@@ -109,7 +109,44 @@ Upon return on $T_{return}$:
 
 ---
 
-## 6. Future Enhancements
+## 6. Loan Transfer Feature Implementation
+
+### The Twist Requirement
+The solution includes a loan transfer feature that allows an active loan to be transferred from one borrower to another with the following constraints:
+- **Original due date carries over unchanged**
+- **Item's availability is unaffected by the transfer**
+
+### Implementation Details
+
+#### Backend Implementation
+- **Controller**: `transferBorrowing` function in `server/controllers/borrowingController.js` (lines 180-232)
+- **Route**: `POST /api/borrowings/:id/transfer` with `adminOnly` middleware
+- **Validation**: Only active loans (`BORROWED` or `OVERDUE` status) can be transferred
+- **User Resolution**: Accepts either `newUserEmail` or `newUserId` to identify the target borrower
+- **Data Preservation**: Only the `userId` field is updated; all other fields (borrowDate, dueDate, quantity, depositAmount, status) remain unchanged
+
+#### Frontend Implementation
+- **API Service**: `transferBorrowing(id, data)` function in `client/src/services/api.js`
+- **UI Component**: `TransferModal.jsx` provides interface for entering target borrower email
+- **Admin Integration**: Transfer button appears in `AdminBorrowings.jsx` for all active loans
+- **User Feedback**: Modal displays confirmation message noting that the original due date remains unchanged
+
+#### Availability Impact Analysis
+Since the transfer operation only changes the `userId` field without modifying:
+- `borrowDate` - unchanged
+- `dueDate` - unchanged  
+- `quantity` - unchanged
+- `status` - unchanged
+
+The availability calculation based on date overlaps remains completely unaffected. The overlapping date algorithm:
+```
+existing.borrowDate <= requested.endDate AND existing.dueDate >= requested.startDate
+```
+continues to work correctly because the date ranges are preserved.
+
+---
+
+## 7. Future Enhancements
 - Barcode/QR Code scanning for rapid desk check-in.
 - CSV export for financial deposit audits.
 - Maintenance logging per serial number.
