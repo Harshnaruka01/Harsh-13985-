@@ -81,6 +81,35 @@ Open your browser to `http://localhost:3000`.
 
 ---
 
+## ☁️ Deploying (Vercel + backend)
+
+This repo is a **React frontend** (`client/`) and a **Node/Express API** (`server/`). Vercel only serves the frontend; the API must run elsewhere (e.g. [Render](https://render.com)) with a real MongoDB database ([MongoDB Atlas](https://www.mongodb.com/atlas) free tier works well).
+
+### 1. Deploy the API (Render)
+
+1. Push this repo to GitHub (already done if you use the remote below).
+2. In Render: **New → Blueprint** and connect the repo, or **New → Web Service** with **Root Directory** = `server`, **Build** = `npm install`, **Start** = `npm start`.
+3. Add environment variables:
+   - `MONGODB_URI` — Atlas connection string (e.g. `mongodb+srv://...`)
+   - `JWT_SECRET` — a long random string
+4. After deploy, note the API URL (e.g. `https://harsh-13985-api.onrender.com`). Test: `https://YOUR-API/api/health`.
+
+A starter `render.yaml` is included at the repo root for Blueprint deploys.
+
+### 2. Deploy the frontend (Vercel)
+
+1. Import the GitHub repo in [Vercel](https://vercel.com).
+2. Leave **Root Directory** as the repository root (default). The root `vercel.json` builds `client/` and enables React Router SPA routing.
+3. **Environment variables** (Project → Settings → Environment Variables):
+   - `VITE_API_URL` = `https://YOUR-API-HOST/api` (no trailing slash), e.g. `https://harsh-13985-api.onrender.com/api`
+4. Redeploy. Open your Vercel URL (e.g. `https://harsh-13985.vercel.app`).
+
+If the site shows **404**, the last deploy likely failed or used the wrong folder—confirm the build log and that `vercel.json` is on `main`.
+
+Login and data only work after **both** the API is live and `VITE_API_URL` points to it. Local dev still uses the Vite proxy to `localhost:5000` when `VITE_API_URL` is unset.
+
+---
+
 ## 📡 API Reference
 
 ### Authentication (`/api/auth`)
