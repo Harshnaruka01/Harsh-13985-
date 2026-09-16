@@ -9,12 +9,32 @@ const seedData = require('../server/utils/seedData');
 const app = require('../server/app');
 
 let handler;
+let initError = null;
 
-module.exports = async (req, res) => {
-  if (!handler) {
+const ensureReady = async () => {
+  if (handler) return;
+  if (initError) throw initError;
+  try {
     await connectDB();
     await seedData(false);
     handler = serverless(app);
+  } catch (err) {
+    initError = err;
+    console.error('[api] Startup failed:', err);
+    throw err;
   }
-  return handler(req, res);
+};
+
+module.exports = async (req, res) => {
+  try {
+    await ensureReady();
+    return handler(req, res);
+  } catch (err) {
+    console.error('[api] Request failed:', err);
+    const message = err.message || 'Internal Server Error';
+    const status = message.includes('MONGODB_URI') ? 503 : 500;
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
+  }
 };

@@ -16,9 +16,10 @@ const handleResponse = async (response) => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     let errorMsg = data.message || `HTTP error! status: ${response.status}`;
-    if (response.status === 405 && !data.message) {
-      errorMsg =
-        'API route not reachable (405). On Vercel, redeploy with the latest vercel.json and set MONGODB_URI.';
+    if ((response.status === 405 || response.status === 500 || response.status === 503) && data.message) {
+      errorMsg = data.message;
+    } else if (response.status === 503 && !data.message) {
+      errorMsg = 'Database not configured. Set MONGODB_URI on Vercel and redeploy.';
     }
     throw new Error(errorMsg);
   }
